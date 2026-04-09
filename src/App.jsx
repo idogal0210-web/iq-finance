@@ -269,8 +269,7 @@ function TransactionRow({ icon: Icon, title, subtitle, date, amount, positive = 
         </div>
         <div>
           <p style={{ color: "#e4e4e7", fontSize: 15, fontWeight: 500, letterSpacing: "0.01em", marginBottom: 2, textAlign: isRtl ? "right" : "left" }}>{title}</p>
-          <p style={{ fontSize: 10, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: isRtl ? "right" : "left", marginBottom: 2 }}>{subtitle}</p>
-          {date && <p style={{ fontSize: 10, color: "#3f3f46", letterSpacing: "0.06em", textAlign: isRtl ? "right" : "left" }}>{date}</p>}
+          <p style={{ fontSize: 10, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: isRtl ? "right" : "left" }}>{subtitle}</p>
         </div>
       </div>
       <span style={{ color: positive ? EMERALD : "#e4e4e7", fontSize: 15.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", letterSpacing: "-0.01em" }}>
@@ -571,6 +570,7 @@ function WalletsScreen({ lang, layoutMode, onBack }) {
   const gradientText = {
     background: "linear-gradient(180deg, #FFFFFF 0%, #71717a 100%)",
     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+    textTransform: "none",
   };
 
   const assets = [
@@ -850,7 +850,7 @@ export default function IQFinanceApp() {
                 <span style={{ position: "relative", display: "inline-flex", width: 6, height: 6, borderRadius: 9999, background: EMERALD, opacity: 0.6 }} />
               </div>
               <p style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.3em", color: "#52525b", fontWeight: 600 }}>{l.netWorth}</p>
-              <p style={{ fontSize: 10, color: "#3f3f46", letterSpacing: "0.08em", marginLeft: "auto" }}>{formatDate()}</p>
+              <p style={{ fontSize: 12, color: "#52525b", letterSpacing: "0.12em", marginLeft: "auto", fontWeight: 500 }}>{formatDate()}</p>
             </div>
             <h2 style={{
               fontSize: "clamp(50px, 13vw, 76px)", fontWeight: 300,

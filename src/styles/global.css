@@ -1,0 +1,11 @@
+@font-face { font-family:'Aeonik'; src:url('https://cdn.jsdelivr.net/gh/nicholasgillespie/fonts@main/aeonik/AeonikTRIAL-Light.woff2') format('woff2'); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:'Aeonik'; src:url('https://cdn.jsdelivr.net/gh/nicholasgillespie/fonts@main/aeonik/AeonikTRIAL-Regular.woff2') format('woff2'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:'Aeonik'; src:url('https://cdn.jsdelivr.net/gh/nicholasgillespie/fonts@main/aeonik/AeonikTRIAL-Medium.woff2') format('woff2'); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:'Aeonik'; src:url('https://cdn.jsdelivr.net/gh/nicholasgillespie/fonts@main/aeonik/AeonikTRIAL-Bold.woff2') format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+@keyframes ping { 75%,100% { transform:scale(2.5); opacity:0; } }
+@keyframes pulseGlow {
+  0%,100% { box-shadow:0 0 4px rgba(45,212,160,0.35), 0 0 10px rgba(45,212,160,0.12); opacity:0.8; }
+  50% { box-shadow:0 0 7px rgba(45,212,160,0.35), 0 0 16px rgba(45,212,160,0.12); opacity:1; }
+}
+input::placeholder { color:#3f3f46; }
+div::-webkit-scrollbar { display: none; }
