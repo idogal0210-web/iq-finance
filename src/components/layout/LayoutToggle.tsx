@@ -1,9 +1,15 @@
 import { Monitor, Smartphone } from 'lucide-react';
-import type { LayoutToggleProps } from '../../types';
 import { smooth } from '../../theme';
+import { useLayout } from '../../contexts/LayoutContext';
 
-export default function LayoutToggle({ mode, onToggle, label }: LayoutToggleProps) {
-  const isApp = mode === "app";
+interface LayoutToggleProps {
+  onToggle: () => void;
+  label: string;
+}
+
+export default function LayoutToggle({ onToggle, label }: LayoutToggleProps) {
+  const { layoutMode } = useLayout();
+  const isApp = layoutMode === "app";
   return (
     <button
       onClick={onToggle}

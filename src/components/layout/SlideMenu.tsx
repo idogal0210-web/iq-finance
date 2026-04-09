@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, PieChart, WalletCards, Settings2, X, Globe } from 'lucide-react';
-import type { SlideMenuProps, MenuNavItemProps } from '../../types';
 import { SURFACE, RICH_BLACK, EMERALD, EMERALD_OUTER, smooth } from '../../theme';
-import { translations } from '../../i18n/translations';
+import { useLanguage } from '../../contexts/LanguageContext';
 import Wordmark from '../Wordmark';
+
+interface MenuNavItemProps {
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; style?: React.CSSProperties }>;
+  label: string;
+  active?: boolean;
+  isRtl: boolean;
+}
 
 function MenuNavItem({ icon: Icon, label, active = false, isRtl }: MenuNavItemProps) {
   const [h, setH] = useState<boolean>(false);
@@ -34,9 +40,14 @@ function MenuNavItem({ icon: Icon, label, active = false, isRtl }: MenuNavItemPr
   );
 }
 
-export default function SlideMenu({ open, onClose, lang, onToggleLang }: SlideMenuProps) {
-  const l = translations[lang];
-  const isRtl = lang === "he";
+interface SlideMenuProps {
+  open: boolean;
+  onClose: () => void;
+  onToggleLang: () => void;
+}
+
+export default function SlideMenu({ open, onClose, onToggleLang }: SlideMenuProps) {
+  const { isRtl, t } = useLanguage();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,10 +60,10 @@ export default function SlideMenu({ open, onClose, lang, onToggleLang }: SlideMe
   }, [open, onClose]);
 
   const navItems = [
-    { icon: LayoutDashboard, label: l.navDashboard, active: true },
-    { icon: PieChart, label: l.navAnalytics },
-    { icon: WalletCards, label: l.navWallets },
-    { icon: Settings2, label: l.navSettings },
+    { icon: LayoutDashboard, label: t.navDashboard, active: true },
+    { icon: PieChart, label: t.navAnalytics },
+    { icon: WalletCards, label: t.navWallets },
+    { icon: Settings2, label: t.navSettings },
   ];
   const fromSide = isRtl ? "left" : "right";
 
@@ -111,7 +122,7 @@ export default function SlideMenu({ open, onClose, lang, onToggleLang }: SlideMe
             flexDirection: isRtl ? "row-reverse" : "row", ...smooth,
           }}>
             <Globe size={16} strokeWidth={1.5} style={{ flexShrink: 0 }} />
-            <span>{l.langSwitch}</span>
+            <span>{t.langSwitch}</span>
           </button>
         </div>
       </div>

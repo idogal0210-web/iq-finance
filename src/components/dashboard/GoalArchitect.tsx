@@ -1,14 +1,10 @@
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import GlassPanel from '../ui/GlassPanel';
-import type { TranslationStrings } from '../../i18n/translations';
 import { smooth } from '../../theme';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-interface GoalArchitectProps {
-  t: TranslationStrings;
-  isRtl: boolean;
-}
-
-export default function GoalArchitect({ t, isRtl }: GoalArchitectProps) {
+export default function GoalArchitect() {
+  const { isRtl, t } = useLanguage();
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
   return (
     <section style={{ marginBottom: 64 }}>

@@ -1,8 +1,19 @@
 import { useState } from 'react';
-import type { AssetCardProps } from '../../types';
 import { EMERALD, glassStyle, glassHover, smooth } from '../../theme';
+import { useLanguage } from '../../contexts/LanguageContext';
+import type React from 'react';
 
-export default function AssetCard({ icon: Icon, label, name, balance, change, positive, isRtl }: AssetCardProps) {
+interface AssetCardProps {
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  label: string;
+  name: string;
+  balance: number;
+  change: string;
+  positive: boolean;
+}
+
+export default function AssetCard({ icon: Icon, label, name, balance, change, positive }: AssetCardProps) {
+  const { isRtl } = useLanguage();
   const [h, setH] = useState<boolean>(false);
   return (
     <div

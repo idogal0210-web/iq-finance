@@ -1,8 +1,18 @@
 import { useState } from 'react';
-import type { TransactionRowProps } from '../../types';
 import { SURFACE, EMERALD, smooth } from '../../theme';
+import { useLanguage } from '../../contexts/LanguageContext';
+import type React from 'react';
 
-export default function TransactionRow({ icon: Icon, title, subtitle, amount, positive = false, isRtl }: TransactionRowProps) {
+interface TransactionRowProps {
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  title: string;
+  subtitle: string;
+  amount: string;
+  positive?: boolean;
+}
+
+export default function TransactionRow({ icon: Icon, title, subtitle, amount, positive = false }: TransactionRowProps) {
+  const { isRtl } = useLanguage();
   const [h, setH] = useState<boolean>(false);
   return (
     <div

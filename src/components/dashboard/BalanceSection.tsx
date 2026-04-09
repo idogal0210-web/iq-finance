@@ -1,14 +1,12 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import GlassPanel from '../ui/GlassPanel';
 import ProgressBar from '../ui/ProgressBar';
-import type { TranslationStrings } from '../../i18n/translations';
 import { EMERALD } from '../../theme';
 import { formatDate } from '../../utils/dateUtils';
 import { useCountUp } from '../../hooks/useCountUp';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface BalanceSectionProps {
-  t: TranslationStrings;
-  isRtl: boolean;
   targetBalance: number;
   income: number;
   expenses: number;
@@ -19,7 +17,8 @@ const gradientText = {
   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
 };
 
-export default function BalanceSection({ t, isRtl, targetBalance, income, expenses }: BalanceSectionProps) {
+export default function BalanceSection({ targetBalance, income, expenses }: BalanceSectionProps) {
+  const { isRtl, t } = useLanguage();
   const displayBalance = useCountUp(targetBalance);
 
   return (

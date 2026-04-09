@@ -1,13 +1,9 @@
 import { Sparkles } from 'lucide-react';
 import GlassPanel from '../ui/GlassPanel';
-import type { TranslationStrings } from '../../i18n/translations';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-interface AIInsightCardProps {
-  t: TranslationStrings;
-  isRtl: boolean;
-}
-
-export default function AIInsightCard({ t, isRtl }: AIInsightCardProps) {
+export default function AIInsightCard() {
+  const { isRtl, t } = useLanguage();
   return (
     <GlassPanel style={{ borderRadius: 24, padding: 3, cursor: "pointer" }}>
       <div style={{

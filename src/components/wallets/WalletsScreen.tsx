@@ -1,12 +1,16 @@
 import { Plus, Link2, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { WalletsScreenProps } from '../../types';
 import { RICH_BLACK, EMERALD_OUTER, noiseUrl, smooth } from '../../theme';
-import { translations } from '../../i18n/translations';
 import { getAssets, getCards } from '../../data/mockData';
 import Reveal from '../ui/Reveal';
 import GrowthTrace from './GrowthTrace';
 import AssetCard from './AssetCard';
 import BrushedMetalCard from './BrushedMetalCard';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useLayout } from '../../contexts/LayoutContext';
+
+interface WalletsScreenProps {
+  onBack: () => void;
+}
 
 const gradientText = {
   background: "linear-gradient(180deg, #FFFFFF 0%, #71717a 100%)",
@@ -14,13 +18,11 @@ const gradientText = {
   textTransform: "none" as const,
 };
 
-export default function WalletsScreen({ lang, layoutMode, onBack }: WalletsScreenProps) {
-  const l = translations[lang];
-  const isRtl = lang === "he";
-  const containerMaxWidth = layoutMode === "web" ? 860 : 460;
-
-  const assets = getAssets(l);
-  const cards = getCards(l);
+export default function WalletsScreen({ onBack }: WalletsScreenProps) {
+  const { isRtl, t } = useLanguage();
+  const { layoutMode, containerMaxWidth } = useLayout();
+  const assets = getAssets(t);
+  const cards = getCards(t);
 
   return (
     <div style={{
@@ -56,7 +58,7 @@ export default function WalletsScreen({ lang, layoutMode, onBack }: WalletsScree
               {isRtl ? <ChevronRight size={16} strokeWidth={1.5} /> : <ChevronLeft size={16} strokeWidth={1.5} />}
             </button>
             <p style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.3em", fontWeight: 600 }}>
-              {l.portfolioAssets}
+              {t.portfolioAssets}
             </p>
           </header>
         </Reveal>
@@ -78,7 +80,7 @@ export default function WalletsScreen({ lang, layoutMode, onBack }: WalletsScree
               <GrowthTrace />
             </div>
             <p style={{ fontSize: 9.5, color: "#27272a", textTransform: "uppercase", letterSpacing: "0.25em", fontWeight: 500 }}>
-              {l.performanceTrend}
+              {t.performanceTrend}
             </p>
           </section>
         </Reveal>
@@ -87,12 +89,12 @@ export default function WalletsScreen({ lang, layoutMode, onBack }: WalletsScree
           <section style={{ marginBottom: 60 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, padding: "0 4px", flexDirection: isRtl ? "row-reverse" : "row" }}>
               <h3 style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.25em", fontWeight: 600 }}>
-                {l.wallets}
+                {t.wallets}
               </h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {assets.map((a, i) => (
-                <AssetCard key={i} {...a} isRtl={isRtl} />
+                <AssetCard key={i} {...a} />
               ))}
             </div>
           </section>
@@ -146,7 +148,7 @@ export default function WalletsScreen({ lang, layoutMode, onBack }: WalletsScree
             >
               <Plus size={14} strokeWidth={1} />
               <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                {l.syncLabel}
+                {t.syncLabel}
               </span>
               <Link2 size={12} strokeWidth={1.5} style={{ opacity: 0.5 }} />
             </button>
