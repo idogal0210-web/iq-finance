@@ -19,7 +19,7 @@ export default function Wordmark({ size = 15, showTagline = true }: WordmarkProp
           <span style={{
             position: "absolute",
             top: size <= 14 ? "-0.12em" : "-0.15em",
-            left: "0.08em",
+            left: "50%", transform: "translateX(-50%)",
             width: "0.26em", height: "0.26em", borderRadius: "50%",
             background: EMERALD, opacity: 0.85,
             boxShadow: `0 0 4px ${EMERALD_GLOW}, 0 0 10px ${EMERALD_OUTER}`,
