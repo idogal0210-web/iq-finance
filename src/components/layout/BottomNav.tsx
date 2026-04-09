@@ -4,9 +4,10 @@ import styles from './BottomNav.module.css';
 
 interface BottomNavProps {
   onWallets: () => void;
+  onAdd?: () => void;
 }
 
-export default function BottomNav({ onWallets }: BottomNavProps) {
+export default function BottomNav({ onWallets, onAdd }: BottomNavProps) {
   return (
     <div className={styles.wrapper}>
       <div
@@ -23,6 +24,7 @@ export default function BottomNav({ onWallets }: BottomNavProps) {
         </button>
         <div className={styles.fabWrap}>
           <button
+            onClick={onAdd}
             className={styles.fab}
             style={{
               background: "linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%)",
