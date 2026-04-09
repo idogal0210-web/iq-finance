@@ -1,12 +1,16 @@
-import { Plus, Link2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Link2, ChevronLeft, ChevronRight, Building2, PiggyBank, BarChart3, Zap } from 'lucide-react';
 import { RICH_BLACK, EMERALD_OUTER, noiseUrl, smooth } from '../../theme';
-import { getAssets, getCards } from '../../data/mockData';
+import { getCards } from '../../data/mockData';
 import Reveal from '../ui/Reveal';
 import GrowthTrace from './GrowthTrace';
 import AssetCard from './AssetCard';
 import BrushedMetalCard from './BrushedMetalCard';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLayout } from '../../contexts/LayoutContext';
+import { useFinance } from '../../contexts/FinanceContext';
+import { useCountUp } from '../../hooks/useCountUp';
+import type { DbWallet } from '../../lib/db';
+import type React from 'react';
 
 interface WalletsScreenProps {
   onBack: () => void;
@@ -18,11 +22,38 @@ const gradientText = {
   textTransform: "none" as const,
 };
 
+function walletToAssetProps(w: DbWallet, t: ReturnType<typeof useLanguage>['t']) {
+  const iconMap: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+    checking: Building2,
+    savings: PiggyBank,
+    investment: BarChart3,
+    crypto: Zap,
+  };
+  const labelMap: Record<string, string> = {
+    checking: t.liquidity,
+    savings: t.safety,
+    investment: t.growth,
+    crypto: t.highVol,
+  };
+  return {
+    icon: iconMap[w.type] ?? Building2,
+    label: labelMap[w.type] ?? w.type,
+    name: w.name,
+    balance: w.balance,
+    change: '',
+    positive: true,
+  };
+}
+
 export default function WalletsScreen({ onBack }: WalletsScreenProps) {
   const { isRtl, t } = useLanguage();
   const { layoutMode, containerMaxWidth } = useLayout();
-  const assets = getAssets(t);
+  const { wallets, totalBalance, isLoading } = useFinance();
+  const displayBalance = useCountUp(totalBalance > 0 ? totalBalance : 142650);
   const cards = getCards(t);
+  const assets = wallets.length > 0
+    ? wallets.map(w => walletToAssetProps(w, t))
+    : [];
 
   return (
     <div style={{
@@ -73,7 +104,7 @@ export default function WalletsScreen({ onBack }: WalletsScreenProps) {
                 textShadow: "0 0 40px rgba(255,255,255,0.08), 0 0 80px rgba(255,255,255,0.04)",
                 ...gradientText,
               }}>
-                ₪142,650
+                ₪{displayBalance.toLocaleString()}
               </h2>
             </div>
             <div style={{ marginTop: 16, marginBottom: 6, opacity: 0.85 }}>
