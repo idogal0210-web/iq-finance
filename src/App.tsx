@@ -168,7 +168,7 @@ function AppContent() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/iq-finance">
+      <BrowserRouter>
         <LanguageProvider>
           <LayoutProvider>
             <FinanceProvider>
