@@ -1,12 +1,9 @@
 const CACHE = 'iq-finance-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-];
+const BASE = '/iq-finance/';
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
+    caches.open(CACHE).then(c => c.addAll([BASE, BASE + 'index.html']))
   );
   self.skipWaiting();
 });
@@ -25,10 +22,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => {
       const network = fetch(e.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
+        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         return res;
       }).catch(() => cached);
       return cached || network;
