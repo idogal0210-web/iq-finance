@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Bell, Menu } from "lucide-react";
 import { RICH_BLACK, EMERALD_OUTER, noiseUrl, smooth } from "./theme";
-import { getTransactions, mockBalance } from "./data/mockData";
+import { getTransactions } from "./data/mockData";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { LayoutProvider, useLayout } from "./contexts/LayoutContext";
+
+const queryClient = new QueryClient();
 import SplashScreen from "./components/SplashScreen";
 import Wordmark from "./components/Wordmark";
 import Reveal from "./components/ui/Reveal";
@@ -77,11 +80,7 @@ function Dashboard() {
         </Reveal>
 
         <Reveal delay={100}>
-          <BalanceSection
-            targetBalance={mockBalance.targetBalance}
-            income={mockBalance.income}
-            expenses={mockBalance.expenses}
-          />
+          <BalanceSection />
         </Reveal>
 
         <Reveal delay={200}>
@@ -151,12 +150,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter basename="/iq-finance">
-      <LanguageProvider>
-        <LayoutProvider>
-          <AppContent />
-        </LayoutProvider>
-      </LanguageProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter basename="/iq-finance">
+        <LanguageProvider>
+          <LayoutProvider>
+            <AppContent />
+          </LayoutProvider>
+        </LanguageProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

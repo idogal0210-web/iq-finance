@@ -5,20 +5,19 @@ import { EMERALD } from '../../theme';
 import { formatDate } from '../../utils/dateUtils';
 import { useCountUp } from '../../hooks/useCountUp';
 import { useLanguage } from '../../contexts/LanguageContext';
-
-interface BalanceSectionProps {
-  targetBalance: number;
-  income: number;
-  expenses: number;
-}
+import { useBalance } from '../../hooks/useFinanceQueries';
 
 const gradientText = {
   background: "linear-gradient(180deg, #FFFFFF 0%, #71717a 100%)",
   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
 };
 
-export default function BalanceSection({ targetBalance, income, expenses }: BalanceSectionProps) {
+export default function BalanceSection() {
   const { isRtl, t } = useLanguage();
+  const { data } = useBalance();
+  const targetBalance = data?.targetBalance ?? 0;
+  const income = data?.income ?? 0;
+  const expenses = data?.expenses ?? 0;
   const displayBalance = useCountUp(targetBalance);
 
   return (
@@ -56,7 +55,7 @@ export default function BalanceSection({ targetBalance, income, expenses }: Bala
           <p style={{ fontSize: 26, color: "#e4e4e7", fontWeight: 400, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", marginBottom: 18, direction: "ltr", textAlign: isRtl ? "right" : "left" }}>
             ₪{expenses.toLocaleString()}
           </p>
-          <ProgressBar ratio={expenses / income} delay="0.6s" />
+          <ProgressBar ratio={income > 0 ? expenses / income : 0} delay="0.6s" />
         </GlassPanel>
       </div>
     </section>
