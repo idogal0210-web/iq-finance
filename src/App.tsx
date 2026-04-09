@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Bell, Menu } from "lucide-react";
 import { RICH_BLACK, EMERALD_OUTER, noiseUrl, smooth } from "./theme";
-import { getTransactions } from "./data/mockData";
-import { mockBalance } from "./data/mockData";
+import { getTransactions, mockBalance } from "./data/mockData";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { LayoutProvider, useLayout } from "./contexts/LayoutContext";
 import SplashScreen from "./components/SplashScreen";
@@ -18,11 +18,12 @@ import AIInsightCard from "./components/dashboard/AIInsightCard";
 import GoalArchitect from "./components/dashboard/GoalArchitect";
 import WalletsScreen from "./components/wallets/WalletsScreen";
 
-function DashboardScreen({ onWallets }: { onWallets: () => void }) {
-  const { lang, isRtl, t, toggleLang } = useLanguage();
+function Dashboard() {
+  const { isRtl, t, toggleLang } = useLanguage();
   const { layoutMode, containerMaxWidth, toggleLayout } = useLayout();
   const [visible, setVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const transactions = getTransactions(t);
 
   useEffect(() => { const id = setTimeout(() => setVisible(true), 100); return () => clearTimeout(id); }, []);
@@ -117,27 +118,32 @@ function DashboardScreen({ onWallets }: { onWallets: () => void }) {
         </Reveal>
       </main>
 
-      <BottomNav onWallets={onWallets} />
+      <BottomNav onWallets={() => navigate("/wallets")} />
     </>
   );
 }
 
 function AppContent() {
   const [splashDone, setSplashDone] = useState(false);
-  const [screen, setScreen] = useState<"dashboard" | "wallets">("dashboard");
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => { if (splashDone) setVisible(true); }, [splashDone]);
 
   return (
-    <div style={{
-      minHeight: "100vh", background: RICH_BLACK, color: "#a1a1aa",
-      fontFamily: "'Aeonik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      overflowX: "hidden", position: "relative",
-    }}>
+    <div
+      style={{
+        minHeight: "100vh", background: RICH_BLACK, color: "#a1a1aa",
+        fontFamily: "'Aeonik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        overflowX: "hidden", position: "relative",
+        opacity: visible ? 1 : 0, transition: "opacity 0.6s ease",
+      }}
+    >
       {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
-
-      {screen === "wallets" ? (
-        <WalletsScreen onBack={() => setScreen("dashboard")} />
-      ) : (
-        splashDone && <DashboardScreen onWallets={() => setScreen("wallets")} />
+      {splashDone && (
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/wallets" element={<WalletsScreen onBack={() => {}} />} />
+        </Routes>
       )}
     </div>
   );
@@ -145,10 +151,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <LayoutProvider>
-        <AppContent />
-      </LayoutProvider>
-    </LanguageProvider>
+    <BrowserRouter basename="/iq-finance">
+      <LanguageProvider>
+        <LayoutProvider>
+          <AppContent />
+        </LayoutProvider>
+      </LanguageProvider>
+    </BrowserRouter>
   );
 }
