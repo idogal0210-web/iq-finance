@@ -33,16 +33,17 @@ function Wordmark({ size = 15, showTagline = true }) {
       }} />
       <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "baseline" }}>
         <span style={{ position: "relative", display: "inline-block" }}>
+          {/* dotless ı — font tittle removed; green dot serves as the sole dot */}
           <span style={{
             fontSize: size, fontWeight: 500, color: "#fff",
             letterSpacing: "0.02em", fontFamily: "'Aeonik', sans-serif",
-          }}>i</span>
+          }}>ı</span>
           <span style={{
             position: "absolute",
-            top: size <= 14 ? "0em" : "-0.03em",
-            left: "0.1em",
-            width: "0.28em", height: "0.28em", borderRadius: "50%",
-            background: EMERALD, opacity: 0.8,
+            top: size <= 14 ? "-0.12em" : "-0.15em",
+            left: "0.08em",
+            width: "0.26em", height: "0.26em", borderRadius: "50%",
+            background: EMERALD, opacity: 0.85,
             boxShadow: `0 0 4px ${EMERALD_GLOW}, 0 0 10px ${EMERALD_OUTER}`,
             animation: "pulseGlow 3s ease-in-out infinite",
           }} />
@@ -101,7 +102,7 @@ function SplashScreen({ onFinish }) {
 
 const t = {
   en: {
-    netWorth: "Total Net Worth", income: "Income", flow: "Flow",
+    netWorth: "Total Net Worth", income: "Income", flow: "Expenses",
     recentFlow: "Recent Flow", archive: "Archive",
     sub: "Studio Subscription", subSub: "Recurring • Today",
     transfer: "External Transfer", transferSub: "Direct • March 11",
@@ -161,6 +162,16 @@ const t = {
    ═══════════════════════════════════════════════════════════ */
 
 const easeOutQuart = (x) => 1 - Math.pow(1 - x, 4);
+
+function ordinalSuffix(d) {
+  if (d > 3 && d < 21) return "th";
+  switch (d % 10) { case 1: return "st"; case 2: return "nd"; case 3: return "rd"; default: return "th"; }
+}
+function formatDate(date = new Date()) {
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const d = date.getDate();
+  return `${M[date.getMonth()]} ${String(d).padStart(2,"0")}${ordinalSuffix(d)}, ${date.getFullYear()}`;
+}
 
 function useCountUp(target, duration = 2000, start = 125000) {
   const [value, setValue] = useState(start);
@@ -234,7 +245,7 @@ function ProgressBar({ ratio, glow = false, delay = "0s" }) {
 }
 
 // Change #4 — strokeWidth={1.5} on all icons for "intelligent & clean" look
-function TransactionRow({ icon: Icon, title, subtitle, amount, positive = false, isRtl }) {
+function TransactionRow({ icon: Icon, title, subtitle, date, amount, positive = false, isRtl }) {
   const [h, setH] = useState(false);
   return (
     <div
@@ -257,8 +268,9 @@ function TransactionRow({ icon: Icon, title, subtitle, amount, positive = false,
           <Icon size={15} strokeWidth={1.5} />
         </div>
         <div>
-          <p style={{ color: "#e4e4e7", fontSize: 15, fontWeight: 500, letterSpacing: "0.01em", marginBottom: 3, textAlign: isRtl ? "right" : "left" }}>{title}</p>
-          <p style={{ fontSize: 11, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: isRtl ? "right" : "left" }}>{subtitle}</p>
+          <p style={{ color: "#e4e4e7", fontSize: 15, fontWeight: 500, letterSpacing: "0.01em", marginBottom: 2, textAlign: isRtl ? "right" : "left" }}>{title}</p>
+          <p style={{ fontSize: 10, color: "#52525b", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: isRtl ? "right" : "left", marginBottom: 2 }}>{subtitle}</p>
+          {date && <p style={{ fontSize: 10, color: "#3f3f46", letterSpacing: "0.06em", textAlign: isRtl ? "right" : "left" }}>{date}</p>}
         </div>
       </div>
       <span style={{ color: positive ? EMERALD : "#e4e4e7", fontSize: 15.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", letterSpacing: "-0.01em" }}>
@@ -758,15 +770,11 @@ export default function IQFinanceApp() {
   // Change #2 — container width driven by layoutMode
   const containerMaxWidth = layoutMode === "web" ? 860 : 460;
 
-  // Change #5 — expanded transaction list (7 items)
   const transactions = [
-    { icon: Briefcase,    title: l.salary,    subtitle: l.salarySub,    amount: "18,500", positive: true  },
-    { icon: ArrowDownLeft,title: l.transfer,  subtitle: l.transferSub,  amount: "4,500",  positive: true  },
-    { icon: TrendingUp,   title: l.invest,    subtitle: l.investSub,    amount: "2,340",  positive: true  },
-    { icon: Repeat,       title: l.sub,       subtitle: l.subSub,       amount: "120",    positive: false },
-    { icon: Shield,       title: l.insurance, subtitle: l.insuranceSub, amount: "380",    positive: false },
-    { icon: ShoppingBag,  title: l.grocery,   subtitle: l.grocerySub,   amount: "215",    positive: false },
-    { icon: Coffee,       title: l.coffee,    subtitle: l.coffeeSub,    amount: "48",     positive: false },
+    { icon: Briefcase,    title: l.salary,    subtitle: l.salarySub,    amount: "18,500", positive: true,  date: formatDate(new Date(2026, 3, 1))  },
+    { icon: ArrowDownLeft,title: l.transfer,  subtitle: l.transferSub,  amount: "4,500",  positive: true,  date: formatDate(new Date(2026, 2, 11)) },
+    { icon: TrendingUp,   title: l.invest,    subtitle: l.investSub,    amount: "2,340",  positive: true,  date: formatDate(new Date(2026, 2, 31)) },
+    { icon: Repeat,       title: l.sub,       subtitle: l.subSub,       amount: "120",    positive: false, date: formatDate(new Date(2026, 3, 9))  },
   ];
 
   return (
@@ -842,6 +850,7 @@ export default function IQFinanceApp() {
                 <span style={{ position: "relative", display: "inline-flex", width: 6, height: 6, borderRadius: 9999, background: EMERALD, opacity: 0.6 }} />
               </div>
               <p style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.3em", color: "#52525b", fontWeight: 600 }}>{l.netWorth}</p>
+              <p style={{ fontSize: 10, color: "#3f3f46", letterSpacing: "0.08em", marginLeft: "auto" }}>{formatDate()}</p>
             </div>
             <h2 style={{
               fontSize: "clamp(50px, 13vw, 76px)", fontWeight: 300,
@@ -889,6 +898,7 @@ export default function IQFinanceApp() {
                     icon={tx.icon}
                     title={tx.title}
                     subtitle={tx.subtitle}
+                    date={tx.date}
                     amount={tx.amount}
                     positive={tx.positive}
                     isRtl={isRtl}
