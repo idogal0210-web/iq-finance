@@ -2,121 +2,198 @@
 
 ## Project Overview
 
-**iQ.finance** is a luxury fintech PWA (Progressive Web App) — a personal finance dashboard with a dark, glassmorphic UI. It is currently a **frontend-only prototype** with hardcoded mock data (no backend, no API, no database). The app supports English and Hebrew (RTL) and can toggle between mobile "app" and desktop "web" layout modes.
+**iQ.finance** is a luxury fintech PWA — a personal finance dashboard with a dark, glassmorphic UI. It supports English and Hebrew (RTL) and toggles between mobile "app" and desktop "web" layout modes.
 
-Live deployment: GitHub Pages at `/iq-finance/` base path.
+**Live deployments:**
+- GitHub Pages: `https://idogal0210-web.github.io/iq-finance/`
+- Vercel: root `/` path
+
+**Backend:** Supabase (PostgreSQL). Tables: `wallets`, `transactions`, `categories`, `subcategories`.
+
+---
 
 ## Tech Stack
 
-| Layer        | Technology                        |
-|--------------|-----------------------------------|
-| Framework    | React 19 (JSX, no TypeScript)     |
-| Build        | Vite 8                            |
-| Icons        | lucide-react                      |
-| Styling      | CSS-in-JS (inline styles), minimal CSS files |
-| Font         | Aeonik (loaded via CDN `@font-face`) |
-| PWA          | Manual service worker (`public/sw.js`) + `manifest.json` |
-| Linting      | ESLint 9 (flat config) with react-hooks + react-refresh plugins |
-| Deployment   | GitHub Pages via GitHub Actions    |
-| Package mgr  | npm (with `legacy-peer-deps=true` in `.npmrc`) |
+| Layer            | Technology                                           |
+|------------------|------------------------------------------------------|
+| Framework        | React 19 + TypeScript (strict)                       |
+| Build            | Vite 8                                               |
+| Routing          | React Router v7                                      |
+| Data fetching    | TanStack React Query v5                              |
+| Backend/DB       | Supabase (`@supabase/supabase-js`)                   |
+| Icons            | lucide-react (`strokeWidth={1.5}` everywhere)        |
+| Styling          | Inline CSS-in-JS + CSS Modules for structural styles |
+| Font             | Aeonik (CDN `@font-face` in `index.html`)            |
+| Testing          | Vitest + @testing-library/react (jsdom)              |
+| Linting          | ESLint 9 flat config                                 |
+| Deployment       | GitHub Pages (CI) + Vercel                           |
+| Package mgr      | npm (`legacy-peer-deps=true` in `.npmrc`)            |
+
+---
 
 ## Project Structure
 
 ```
 iq-finance/
-├── .github/workflows/deploy.yml   # CI: build + deploy to GitHub Pages on push to main
-├── public/
-│   ├── sw.js                       # Service worker (cache-first with network update)
-│   ├── manifest.json               # PWA manifest
-│   ├── icon-192.png, icon-512.png  # PWA icons
-│   ├── apple-touch-icon.png        # iOS icon
-│   ├── favicon.svg, icon.svg, icons.svg  # SVG icons
-│   └── ...
+├── .github/workflows/deploy.yml   # CI: test → build → deploy to GitHub Pages
+├── public/                        # sw.js, manifest.json, PWA icons, favicon
 ├── src/
-│   ├── main.jsx                    # Entry point — registers service worker, renders <App />
-│   ├── App.jsx                     # **Entire application** — all components in one file (~1025 lines)
-│   ├── App.css                     # Supplementary CSS (minimal, mostly unused scaffold styles)
-│   └── index.css                   # CSS reset (box-sizing, margin)
-├── index.html                      # HTML shell with PWA meta tags
-├── vite.config.js                  # Vite config — base path set to /iq-finance/
-├── eslint.config.js                # ESLint flat config
-├── package.json                    # Scripts: dev, build, lint, preview
-└── .npmrc                          # legacy-peer-deps=true
+│   ├── main.tsx                   # Entry: registers service worker, renders <App />
+│   ├── App.tsx                    # Root: QueryClientProvider, BrowserRouter, providers, routes
+│   ├── theme/
+│   │   ├── tokens.ts              # Color/spacing constants (RICH_BLACK, EMERALD, etc.)
+│   │   ├── styles.ts              # Shared style objects (glassStyle, smooth, noiseUrl)
+│   │   └── index.ts               # Re-exports tokens + styles
+│   ├── types/index.ts             # All shared TypeScript types and interfaces
+│   ├── i18n/translations.ts       # EN + HE translation strings
+│   ├── lib/
+│   │   ├── supabase.ts            # Supabase client (reads VITE_SUPABASE_URL/ANON_KEY)
+│   │   └── db.ts                  # All DB operations: fetch/insert/update/delete
+│   ├── services/
+│   │   └── financeService.ts      # Mock service: balance, growth chart, assets, cards (not yet Supabase)
+│   ├── hooks/
+│   │   └── useFinanceQueries.ts   # React Query hooks for both mock and live data
+│   ├── contexts/
+│   │   ├── FinanceContext.tsx     # Live Supabase: wallets, transactions, derived totals
+│   │   ├── LanguageContext.tsx    # i18n state: lang, isRtl, t, toggleLang
+│   │   └── LayoutContext.tsx      # Layout mode: "app" | "web", containerMaxWidth
+│   ├── data/
+│   │   └── mockData.ts            # Hardcoded mock data (balance, growth, assets, cards, transactions)
+│   ├── components/
+│   │   ├── SplashScreen.tsx       # Animated splash on first load
+│   │   ├── Wordmark.tsx           # iQ logo + tagline
+│   │   ├── AddTransactionSheet.tsx # Bottom sheet: manual entry + CSV import
+│   │   ├── dashboard/
+│   │   │   ├── BalanceSection.tsx # Balance display + growth sparkline
+│   │   │   ├── AIInsightCard.tsx  # AI-generated financial insight card
+│   │   │   ├── GoalArchitect.tsx  # Financial goals section
+│   │   │   ├── GrowthTrace.tsx    # SVG sparkline chart
+│   │   │   └── TransactionRow.tsx # Single transaction list item
+│   │   ├── wallets/
+│   │   │   ├── WalletsScreen.tsx  # Wallets + assets + cards screen
+│   │   │   ├── AssetCard.tsx      # Individual asset card
+│   │   │   └── BrushedMetalCard.tsx # Credit/debit card visual
+│   │   ├── settings/
+│   │   │   └── SettingsScreen.tsx # Category Manager (live CRUD via Supabase)
+│   │   ├── layout/
+│   │   │   ├── BottomNav.tsx      # Fixed bottom navigation bar
+│   │   │   ├── LayoutToggle.tsx   # App ↔ Web layout switcher button
+│   │   │   └── SlideMenu.tsx      # Side drawer menu
+│   │   └── ui/
+│   │       ├── GlassPanel.tsx     # Frosted glass container
+│   │       ├── ProgressBar.tsx    # Animated progress bar
+│   │       └── Reveal.tsx         # Scroll-in entrance animation wrapper
+│   └── test/
+│       ├── setup.ts               # @testing-library/jest-dom setup
+│       └── *.test.ts              # Vitest tests (17 passing)
+├── index.html                     # HTML shell: Aeonik font, PWA meta, viewport lock
+├── vite.config.ts                 # base: VITE_BASE_PATH ?? '/'
+├── vercel.json                    # SPA rewrites: all → /index.html
+└── tsconfig.json
 ```
 
-## Key Architecture Decisions
+---
 
-### Single-file component architecture
-All UI components live in `src/App.jsx`. This includes:
-- **Design tokens** — Color constants (`RICH_BLACK`, `SURFACE`, `EMERALD`, etc.)
-- **Shared style objects** — `glassStyle`, `glassHover`, `smooth` transition
-- **Utility components** — `Reveal` (scroll-in animation), `GlassPanel`, `ProgressBar`
-- **Feature components** — `Wordmark`, `SplashScreen`, `SlideMenu`, `TransactionRow`, `MenuNavItem`, `LayoutToggle`, `AssetCard`, `BrushedMetalCard`, `GrowthTrace`, `WalletsScreen`
-- **Main app** — `IQFinanceApp` (default export) manages all state
+## Routes
 
-### Inline styles (CSS-in-JS)
-Almost all styling is done via inline `style={{}}` objects. There are no CSS modules, Tailwind, or styled-components. Hover states are managed via `useState` + `onMouseEnter`/`onMouseLeave`. Animations use CSS `@keyframes` injected via `<style>` tags.
+| Path         | Component        | Notes                            |
+|--------------|------------------|----------------------------------|
+| `/`          | `Dashboard`      | Main screen, live transactions   |
+| `/wallets`   | `WalletsScreen`  | Assets, wallet cards             |
+| `/settings`  | `SettingsScreen` | Category Manager (Supabase CRUD) |
 
-### i18n
-Translations are a simple `t` object with `en` and `he` keys. RTL layout is toggled by checking `lang === "he"` and conditionally applying `flexDirection: "row-reverse"`, `textAlign: "right"`, etc.
+---
 
-### Screen routing
-No router library — screen state (`"dashboard"` | `"wallets"`) is managed via `useState` in the root component.
+## Data Sources
 
-### Currency
-All monetary values displayed in Israeli New Shekel (₪).
+| Data            | Source                     | Hook / Context              |
+|-----------------|----------------------------|-----------------------------|
+| Wallets         | Supabase `wallets`         | `useDbWallets()` / `FinanceContext` |
+| Transactions    | Supabase `transactions`    | `useDbTransactions()` / `FinanceContext` |
+| Categories      | Supabase `categories`      | `useDbCategories()`         |
+| Subcategories   | Supabase `subcategories`   | `useDbSubcategories()`      |
+| Balance display | Mock (`financeService.ts`) | `useBalance()`              |
+| Growth chart    | Mock (`financeService.ts`) | `useGrowthPoints()`         |
+| Assets          | Mock (`financeService.ts`) | `useAssets()`               |
+| Cards           | Mock (`financeService.ts`) | `useCards()`                |
+
+> **Note:** `totalBalance` in `FinanceContext` is computed from live Supabase wallets. The mock `fetchBalance` in `financeService.ts` is a separate unused path — its data is not shown on dashboard when Supabase wallets exist.
+
+---
+
+## Environment Variables
+
+```
+VITE_SUPABASE_URL=...       # Supabase project URL
+VITE_SUPABASE_ANON_KEY=...  # Supabase anon public key
+VITE_BASE_PATH=...          # Base path (GitHub Actions sets /iq-finance/, Vercel omits it)
+```
+
+---
 
 ## Commands
 
 ```bash
-npm run dev       # Start Vite dev server (hot reload)
-npm run build     # Production build → dist/
-npm run preview   # Preview production build locally
-npm run lint      # Run ESLint
+npm run dev          # Vite dev server (HMR)
+npm run build        # Production build → dist/
+npm run preview      # Preview production build locally
+npm run lint         # ESLint
+npm run test         # Vitest watch mode
+npm run test:run     # Vitest single run (used in CI)
+npm run test:coverage # Coverage report
 ```
 
-**No test framework is configured.** There are no tests.
+---
 
-## Development Conventions
+## Styling Conventions
 
-### Styling
-- Use inline `style={{}}` objects, consistent with existing code
-- Design tokens are constants at the top of `App.jsx` — use them instead of hardcoding colors
-- Glass/frosted effect: use `glassStyle` and `glassHover` objects
-- Smooth transitions: spread `...smooth` into style objects
-- All icons use `strokeWidth={1.5}` for a clean, consistent look
+- **Inline `style={{}}`** everywhere — no Tailwind, no styled-components
+- **Design tokens** from `src/theme/` — always use `RICH_BLACK`, `EMERALD`, `SURFACE`, etc. instead of hardcoding colors
+- **Shared style objects** — spread `...glassStyle` for glass panels, `...smooth` for transitions
+- **Hover states** — via `useState` + `onMouseEnter`/`onMouseLeave` (not CSS `:hover`)
+- **CSS Modules** — used only for structural animation/layout styles (`GlassPanel.module.css`, `BottomNav.module.css`, etc.)
+- **Icons** — always `strokeWidth={1.5}`
 
-### Component patterns
-- Hover states via `useState` + mouse events (not CSS `:hover`)
-- Entrance animations via `<Reveal delay={ms}>` wrapper
-- RTL support: every layout component accepts `isRtl` and adjusts `flexDirection`, `textAlign`, etc.
-- New text strings must be added to both `t.en` and `t.he` translation objects
+---
 
-### ESLint rules
-- Unused variables starting with uppercase or `_` are allowed (`varsIgnorePattern: '^[A-Z_]'`)
-- React hooks rules enforced
-- React Refresh rules enforced (components must be exportable for HMR)
+## i18n (EN / HE)
 
-### PWA considerations
-- Base path is `/iq-finance/` — all asset references in `manifest.json`, `sw.js`, and `vite.config.js` must use this prefix
-- Service worker uses stale-while-revalidate caching strategy
-- Cache version is `'iq-finance-v1'` — bump when deploying breaking changes to cached assets
+- `LanguageContext` provides `{ lang, isRtl, t, toggleLang }`
+- Add new strings to **both** `en` and `he` objects in `src/i18n/translations.ts`
+- RTL layout: conditionally apply `flexDirection: 'row-reverse'` and `textAlign: 'right'` based on `isRtl`
+- Currency: ILS (₪) primary; `AddTransactionSheet` also supports USD ($) and EUR (€)
+
+---
+
+## AddTransactionSheet Features
+
+- Manual entry: amount, currency (₪/$/ €), type (income/expense), category, subcategory, description
+- CSV import: parses bank statement CSVs (auto-detects date/amount/description columns, supports Hebrew headers)
+- Invalidates `['db-transactions']` and `['db-wallets']` React Query caches after insert
+
+---
 
 ## Deployment
 
-Push to `main` triggers the GitHub Actions workflow (`.github/workflows/deploy.yml`):
-1. Checkout → Node 20 → `npm ci --legacy-peer-deps`
-2. `npm run build`
-3. Upload `dist/` → Deploy to GitHub Pages
+### GitHub Pages
+- Push to `main` → CI runs tests → builds with `VITE_BASE_PATH=/iq-finance/` → deploys `dist/`
+- PWA service worker cache key: `'iq-finance-v1'` — bump when deploying breaking asset changes
 
-**Important:** The Vite `base` option is set to `/iq-finance/` — this must match the GitHub repo name for correct asset paths on GitHub Pages.
+### Vercel
+- Builds automatically on push to `main`
+- No `VITE_BASE_PATH` set → base is `/`
+- `vercel.json` rewrites all routes to `/index.html` for SPA routing
+
+### BrowserRouter base path
+`App.tsx` uses `basename={import.meta.env.BASE_URL.replace(/\/$/, '')}` to strip trailing slash and avoid double-slash route paths (`//settings`).
+
+---
 
 ## Things to Watch
 
-- **No TypeScript** — this is a plain JS/JSX project. Do not introduce `.ts`/`.tsx` files.
-- **No router** — screen navigation is simple state. Adding react-router would be a significant refactor.
-- **No state management library** — all state is local `useState` in the root component.
-- **All mock data is hardcoded** — balances, transactions, etc. are constants in `App.jsx`.
-- **Single-file app** — `App.jsx` is ~1025 lines. When adding features, add components in the same file unless explicitly asked to split.
-- **Font loading** — Aeonik is loaded from a third-party CDN via `@font-face` in a `<style>` tag at the bottom of the root component.
-- **No `.env` files** — there are no environment variables or secrets.
+- **TypeScript strict mode** — no implicit `any`, proper typing required
+- **Two data layers coexist** — mock `financeService.ts` and live `lib/db.ts`. The dashboard uses live Supabase data when available (falling back to mock). `FinanceContext` is always live.
+- **React Query cache keys** — invalidate the right key after mutations (`['db-transactions']`, `['db-wallets']`, etc.)
+- **CSS Modules imports** — some components have `.module.css` files; don't confuse with inline styles
+- **No auth** — Supabase is currently accessed with the anon key (no user login/RLS)
+- **Tests run in CI** before deploy — keep them passing
