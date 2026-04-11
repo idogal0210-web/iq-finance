@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Menu, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { RICH_BLACK, EMERALD_OUTER, noiseUrl, smooth } from "./theme";
 import { getTransactions } from "./data/mockData";
@@ -11,6 +12,9 @@ import { FinanceProvider } from "./contexts/FinanceContext";
 
 const queryClient = new QueryClient();
 import SplashScreen from "./components/SplashScreen";
+import SmoothScroll from "./components/SmoothScroll";
+import ScrollToTop from "./components/ScrollToTop";
+import PageTransition from "./components/PageTransition";
 import Wordmark from "./components/Wordmark";
 import Reveal from "./components/ui/Reveal";
 import GlassPanel from "./components/ui/GlassPanel";
@@ -24,6 +28,15 @@ import GoalArchitect from "./components/dashboard/GoalArchitect";
 import WalletsScreen from "./components/wallets/WalletsScreen";
 import SettingsScreen from "./components/settings/SettingsScreen";
 import AddTransactionSheet from "./components/AddTransactionSheet";
+
+const transactionListVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.08 } },
+};
+
+const iconButtonTap = { scale: 0.92 };
+const iconButtonHover = { y: -1 };
+const iconButtonSpring = { type: "spring" as const, stiffness: 400, damping: 22 };
 
 function Dashboard() {
   const { isRtl, t, toggleLang } = useLanguage();
@@ -74,22 +87,33 @@ function Dashboard() {
             <Wordmark size={28} showTagline={true} />
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: isRtl ? "row-reverse" : "row" }}>
               <LayoutToggle onToggle={toggleLayout} label={layoutMode === "app" ? t.layoutWeb : t.layoutApp} />
-              <button style={{
-                width: 38, height: 38, borderRadius: 12,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)",
-                cursor: "pointer", ...smooth,
-              }}>
+              <motion.button
+                whileHover={iconButtonHover}
+                whileTap={iconButtonTap}
+                transition={iconButtonSpring}
+                style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)",
+                  cursor: "pointer", ...smooth,
+                }}
+              >
                 <Bell size={15} strokeWidth={1.5} color="#52525b" />
-              </button>
-              <button onClick={() => setMenuOpen(true)} style={{
-                width: 38, height: 38, borderRadius: 12,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)",
-                cursor: "pointer", ...smooth,
-              }}>
+              </motion.button>
+              <motion.button
+                onClick={() => setMenuOpen(true)}
+                whileHover={iconButtonHover}
+                whileTap={iconButtonTap}
+                transition={iconButtonSpring}
+                style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)",
+                  cursor: "pointer", ...smooth,
+                }}
+              >
                 <Menu size={15} strokeWidth={1.5} color="#52525b" />
-              </button>
+              </motion.button>
             </div>
           </header>
         </Reveal>
@@ -105,18 +129,23 @@ function Dashboard() {
               <button style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>{t.archive}</button>
             </div>
             <GlassPanel style={{ borderRadius: 28, padding: "6px" }}>
-              {liveTransactions.map((tx, i) => (
-                <div key={i}>
-                  {i > 0 && <div style={{ height: 1, margin: "0 16px", background: "rgba(255,255,255,0.03)" }} />}
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={transactionListVariants}
+              >
+                {liveTransactions.map((tx, i) => (
                   <TransactionRow
+                    key={i}
                     icon={tx.icon}
                     title={tx.title}
                     subtitle={tx.subtitle}
                     amount={tx.amount}
                     positive={tx.positive}
+                    showTopBorder={i > 0}
                   />
-                </div>
-              ))}
+                ))}
+              </motion.div>
             </GlassPanel>
           </section>
         </Reveal>
@@ -141,13 +170,14 @@ function Dashboard() {
 function AppContent() {
   const [splashDone, setSplashDone] = useState(false);
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
 
   useEffect(() => { if (splashDone) setVisible(true); }, [splashDone]);
 
   return (
     <div
       style={{
-        height: "100vh", overflowY: "auto", background: RICH_BLACK, color: "#a1a1aa",
+        minHeight: "100vh", background: RICH_BLACK, color: "#a1a1aa",
         fontFamily: "'Aeonik', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         overflowX: "hidden", position: "relative",
         opacity: visible ? 1 : 0, transition: "opacity 0.6s ease",
@@ -155,11 +185,16 @@ function AppContent() {
     >
       {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
       {splashDone && (
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/settings" element={<SettingsScreen />} />
-          <Route path="/wallets" element={<WalletsScreen onBack={() => {}} />} />
-        </Routes>
+        <>
+          <ScrollToTop />
+          <AnimatePresence mode="wait" initial={false}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<PageTransition><Dashboard /></PageTransition>} />
+              <Route path="/settings" element={<PageTransition><SettingsScreen /></PageTransition>} />
+              <Route path="/wallets" element={<PageTransition><WalletsScreen onBack={() => {}} /></PageTransition>} />
+            </Routes>
+          </AnimatePresence>
+        </>
       )}
     </div>
   );
@@ -172,7 +207,9 @@ export default function App() {
         <LanguageProvider>
           <LayoutProvider>
             <FinanceProvider>
-              <AppContent />
+              <SmoothScroll>
+                <AppContent />
+              </SmoothScroll>
             </FinanceProvider>
           </LayoutProvider>
         </LanguageProvider>
