@@ -6,7 +6,6 @@
 
 **Live deployments:**
 - GitHub Pages: `https://idogal0210-web.github.io/iq-finance/`
-- Vercel: root `/` path
 
 **Backend:** Supabase (PostgreSQL). Tables: `wallets`, `transactions`, `categories`, `subcategories`.
 
@@ -26,7 +25,7 @@
 | Font             | Aeonik (CDN `@font-face` in `index.html`)            |
 | Testing          | Vitest + @testing-library/react (jsdom)              |
 | Linting          | ESLint 9 flat config                                 |
-| Deployment       | GitHub Pages (CI) + Vercel                           |
+| Deployment       | GitHub Pages (CI)                                    |
 | Package mgr      | npm (`legacy-peer-deps=true` in `.npmrc`)            |
 
 ---
@@ -88,7 +87,6 @@ iq-finance/
 │       └── *.test.ts              # Vitest tests (17 passing)
 ├── index.html                     # HTML shell: Aeonik font, PWA meta, viewport lock
 ├── vite.config.ts                 # base: VITE_BASE_PATH ?? '/'
-├── vercel.json                    # SPA rewrites: all → /index.html
 └── tsconfig.json
 ```
 
@@ -126,7 +124,7 @@ iq-finance/
 ```
 VITE_SUPABASE_URL=...       # Supabase project URL
 VITE_SUPABASE_ANON_KEY=...  # Supabase anon public key
-VITE_BASE_PATH=...          # Base path (GitHub Actions sets /iq-finance/, Vercel omits it)
+VITE_BASE_PATH=...          # Base path (GitHub Actions sets /iq-finance/)
 ```
 
 ---
@@ -178,11 +176,6 @@ npm run test:coverage # Coverage report
 ### GitHub Pages
 - Push to `main` → CI runs tests → builds with `VITE_BASE_PATH=/iq-finance/` → deploys `dist/`
 - PWA service worker cache key: `'iq-finance-v1'` — bump when deploying breaking asset changes
-
-### Vercel
-- Builds automatically on push to `main`
-- No `VITE_BASE_PATH` set → base is `/`
-- `vercel.json` rewrites all routes to `/index.html` for SPA routing
 
 ### BrowserRouter base path
 `App.tsx` uses `basename={import.meta.env.BASE_URL.replace(/\/$/, '')}` to strip trailing slash and avoid double-slash route paths (`//settings`).
