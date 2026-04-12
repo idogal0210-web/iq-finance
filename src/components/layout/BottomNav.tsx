@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
 import { Home, Plus, WalletCards } from 'lucide-react';
-import { smooth } from '../../theme';
+import { EMERALD, smooth } from '../../theme';
 import styles from './BottomNav.module.css';
 
 interface BottomNavProps {
+  onHome?: () => void;
   onWallets: () => void;
   onAdd?: () => void;
+  activePage?: 'home' | 'wallets';
 }
 
 const navButtonHover = { y: -2 };
@@ -14,7 +16,7 @@ const fabTap = { scale: 0.95 };
 const fabHover = { y: -2, scale: 1.03 };
 const buttonSpring = { type: 'spring' as const, stiffness: 400, damping: 22 };
 
-export default function BottomNav({ onWallets, onAdd }: BottomNavProps) {
+export default function BottomNav({ onHome, onWallets, onAdd, activePage = 'home' }: BottomNavProps) {
   return (
     <div className={styles.wrapper}>
       <div
@@ -27,13 +29,21 @@ export default function BottomNav({ onWallets, onAdd }: BottomNavProps) {
         }}
       >
         <motion.button
+          onClick={onHome}
           whileHover={navButtonHover}
           whileTap={navButtonTap}
           transition={buttonSpring}
           className={styles.btn}
-          style={{ color: "#52525b" }}
+          style={{ color: activePage === 'home' ? EMERALD : '#52525b', ...smooth }}
         >
           <Home size={19} strokeWidth={1.5} />
+          {activePage === 'home' && (
+            <span style={{
+              position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+              width: 3, height: 3, borderRadius: 9999, background: EMERALD,
+              boxShadow: `0 0 5px ${EMERALD}`,
+            }} />
+          )}
         </motion.button>
         <div className={styles.fabWrap}>
           <motion.button
@@ -57,9 +67,16 @@ export default function BottomNav({ onWallets, onAdd }: BottomNavProps) {
           whileTap={navButtonTap}
           transition={buttonSpring}
           className={styles.btn}
-          style={{ color: "#52525b", ...smooth }}
+          style={{ color: activePage === 'wallets' ? EMERALD : '#52525b', ...smooth }}
         >
           <WalletCards size={19} strokeWidth={1.5} />
+          {activePage === 'wallets' && (
+            <span style={{
+              position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+              width: 3, height: 3, borderRadius: 9999, background: EMERALD,
+              boxShadow: `0 0 5px ${EMERALD}`,
+            }} />
+          )}
         </motion.button>
       </div>
     </div>

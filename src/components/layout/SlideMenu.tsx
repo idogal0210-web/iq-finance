@@ -45,9 +45,13 @@ interface SlideMenuProps {
   onClose: () => void;
   onToggleLang: () => void;
   onSettings?: () => void;
+  onAnalysis?: () => void;
+  onWallets?: () => void;
+  onDashboard?: () => void;
+  activePath?: string;
 }
 
-export default function SlideMenu({ open, onClose, onToggleLang, onSettings }: SlideMenuProps) {
+export default function SlideMenu({ open, onClose, onToggleLang, onSettings, onAnalysis, onWallets, onDashboard, activePath = '/' }: SlideMenuProps) {
   const { isRtl, t } = useLanguage();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -61,10 +65,10 @@ export default function SlideMenu({ open, onClose, onToggleLang, onSettings }: S
   }, [open, onClose]);
 
   const navItems = [
-    { icon: LayoutDashboard, label: t.navDashboard, active: true, onClick: undefined as (() => void) | undefined },
-    { icon: PieChart, label: t.navAnalytics, onClick: undefined as (() => void) | undefined },
-    { icon: WalletCards, label: t.navWallets, onClick: undefined as (() => void) | undefined },
-    { icon: Settings2, label: t.navSettings, onClick: onSettings },
+    { icon: LayoutDashboard, label: t.navDashboard, active: activePath === '/',         onClick: onDashboard },
+    { icon: PieChart,        label: t.navAnalytics, active: activePath === '/analysis', onClick: onAnalysis  },
+    { icon: WalletCards,     label: t.navWallets,   active: activePath === '/wallets',  onClick: onWallets   },
+    { icon: Settings2,       label: t.navSettings,  active: activePath === '/settings', onClick: onSettings  },
   ];
   const fromSide = isRtl ? "left" : "right";
 
@@ -111,7 +115,7 @@ export default function SlideMenu({ open, onClose, onToggleLang, onSettings }: S
         </div>
         <div style={{ flex: 1, padding: "20px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
           {navItems.map((item, i) => (
-            <div key={i} onClick={item.onClick}>
+            <div key={i} onClick={() => { if (item.onClick) { item.onClick(); onClose(); } }}>
               <MenuNavItem icon={item.icon} label={item.label} active={item.active} isRtl={isRtl} />
             </div>
           ))}

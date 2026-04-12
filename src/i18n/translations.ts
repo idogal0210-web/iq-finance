@@ -28,6 +28,12 @@ export const translations = {
     vsLastMonth: "vs last month",
     performanceTrend: "30-day performance",
     wallets: "Wallets",
+    analysis: "Analysis",
+    monthlyFlow: "Monthly Flow",
+    spendingBreakdown: "Spending Breakdown",
+    netSavings: "Net Savings",
+    savingsRate: "Savings Rate",
+    monthlySavingsRate: "Monthly savings rate",
   },
   he: {
     netWorth: "שווי נקי כולל", income: "הכנסות", flow: "הוצאות",
@@ -56,6 +62,12 @@ export const translations = {
     vsLastMonth: "לעומת החודש הקודם",
     performanceTrend: "ביצועים 30 יום",
     wallets: "ארנקים",
+    analysis: "ניתוח",
+    monthlyFlow: "תזרים חודשי",
+    spendingBreakdown: "פירוט הוצאות",
+    netSavings: "חיסכון נטו",
+    savingsRate: "שיעור חיסכון",
+    monthlySavingsRate: "שיעור חיסכון חודשי",
   },
 };
 

@@ -27,6 +27,7 @@ import AIInsightCard from "./components/dashboard/AIInsightCard";
 import GoalArchitect from "./components/dashboard/GoalArchitect";
 import WalletsScreen from "./components/wallets/WalletsScreen";
 import SettingsScreen from "./components/settings/SettingsScreen";
+import AnalysisScreen from "./components/analysis/AnalysisScreen";
 import AddTransactionSheet from "./components/AddTransactionSheet";
 
 const transactionListVariants = {
@@ -44,8 +45,8 @@ function Dashboard() {
   const { transactions: dbTransactions } = useFinance();
   const [visible, setVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const mockTransactions = getTransactions(t);
   const liveTransactions = dbTransactions.length > 0
     ? dbTransactions.slice(0, 4).map(tx => ({
@@ -68,7 +69,16 @@ function Dashboard() {
         <div style={{ position: "absolute", bottom: "-10%", left: "20%", width: "40%", height: "30%", borderRadius: "50%", background: `radial-gradient(ellipse, ${EMERALD_OUTER}, transparent 70%)`, filter: "blur(80px)", opacity: 0.35 }} />
       </div>
 
-      <SlideMenu open={menuOpen} onClose={() => setMenuOpen(false)} onToggleLang={toggleLang} onSettings={() => { setMenuOpen(false); navigate('/settings'); }} />
+      <SlideMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onToggleLang={toggleLang}
+        activePath={location.pathname}
+        onDashboard={() => navigate('/')}
+        onAnalysis={() => navigate('/analysis')}
+        onWallets={() => navigate('/wallets')}
+        onSettings={() => navigate('/settings')}
+      />
 
       <main style={{
         maxWidth: containerMaxWidth,
@@ -161,8 +171,6 @@ function Dashboard() {
         </Reveal>
       </main>
 
-      <BottomNav onWallets={() => navigate("/wallets")} onAdd={() => setAddOpen(true)} />
-      <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
     </>
   );
 }
@@ -170,7 +178,11 @@ function Dashboard() {
 function AppContent() {
   const [splashDone, setSplashDone] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const activePage: 'home' | 'wallets' = location.pathname === '/wallets' ? 'wallets' : 'home';
 
   useEffect(() => { if (splashDone) setVisible(true); }, [splashDone]);
 
@@ -190,10 +202,18 @@ function AppContent() {
           <AnimatePresence mode="wait" initial={false}>
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<PageTransition><Dashboard /></PageTransition>} />
+              <Route path="/analysis" element={<PageTransition><AnalysisScreen /></PageTransition>} />
               <Route path="/settings" element={<PageTransition><SettingsScreen /></PageTransition>} />
-              <Route path="/wallets" element={<PageTransition><WalletsScreen onBack={() => {}} /></PageTransition>} />
+              <Route path="/wallets" element={<PageTransition><WalletsScreen onBack={() => navigate(-1)} /></PageTransition>} />
             </Routes>
           </AnimatePresence>
+          <BottomNav
+            onHome={() => navigate('/')}
+            onWallets={() => navigate('/wallets')}
+            onAdd={() => setAddOpen(true)}
+            activePage={activePage}
+          />
+          <AddTransactionSheet open={addOpen} onClose={() => setAddOpen(false)} />
         </>
       )}
     </div>
