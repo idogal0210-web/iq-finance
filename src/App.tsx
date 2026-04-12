@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,24 +39,47 @@ const iconButtonTap = { scale: 0.92 };
 const iconButtonHover = { y: -1 };
 const iconButtonSpring = { type: "spring" as const, stiffness: 400, damping: 22 };
 
+// Group transactions by YYYY-MM for the archive view
+function groupByMonth(txs: ReturnType<typeof getTransactions>) {
+  const groups: { label: string; items: typeof txs }[] = [];
+  const seen = new Set<string>();
+  for (const tx of txs) {
+    const key = tx.subtitle?.substring(0, 7) ?? 'Other';
+    if (!seen.has(key)) {
+      seen.add(key);
+      groups.push({ label: key, items: [] });
+    }
+    groups.find(g => g.label === key)!.items.push(tx);
+  }
+  return groups;
+}
+
 function Dashboard() {
   const { isRtl, t, toggleLang } = useLanguage();
   const { layoutMode, containerMaxWidth, toggleLayout } = useLayout();
   const { transactions: dbTransactions } = useFinance();
   const [visible, setVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const mockTransactions = getTransactions(t);
-  const liveTransactions = dbTransactions.length > 0
-    ? dbTransactions.slice(0, 4).map(tx => ({
-        icon: tx.type === 'income' ? ArrowDownLeft : ArrowUpRight,
-        title: tx.description ?? (tx.type === 'income' ? t.income : t.flow),
-        subtitle: tx.date,
-        amount: tx.amount.toLocaleString(),
-        positive: tx.type === 'income',
-      }))
-    : mockTransactions;
+
+  const allLive = useMemo(() =>
+    dbTransactions.length > 0
+      ? dbTransactions.map(tx => ({
+          icon: tx.type === 'income' ? ArrowDownLeft : ArrowUpRight,
+          title: tx.description ?? (tx.type === 'income' ? t.income : t.flow),
+          subtitle: tx.date,
+          amount: tx.amount.toLocaleString(),
+          positive: tx.type === 'income',
+        }))
+      : mockTransactions,
+    [dbTransactions, mockTransactions, t],
+  );
+
+  const liveTransactions = showArchive ? allLive : allLive.slice(0, 4);
+  const archiveGroups = useMemo(() => groupByMonth(allLive), [allLive]);
 
   useEffect(() => { const id = setTimeout(() => setVisible(true), 100); return () => clearTimeout(id); }, []);
 
@@ -135,28 +158,51 @@ function Dashboard() {
         <Reveal delay={200}>
           <section style={{ marginBottom: 56 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, padding: "0 4px", flexDirection: isRtl ? "row-reverse" : "row" }}>
-              <h3 style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.25em", fontWeight: 600 }}>{t.recentFlow}</h3>
-              <button style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>{t.archive}</button>
-            </div>
-            <GlassPanel style={{ borderRadius: 28, padding: "6px" }}>
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={transactionListVariants}
+              <h3 style={{ fontSize: 11, color: "#3f3f46", textTransform: "uppercase", letterSpacing: "0.25em", fontWeight: 600 }}>
+                {showArchive ? t.archiveAll : t.recentFlow}
+              </h3>
+              <button
+                onClick={() => setShowArchive(p => !p)}
+                style={{ fontSize: 11, color: showArchive ? "#a1a1aa" : "#3f3f46", textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", cursor: "pointer", fontWeight: 500, transition: "color 0.3s ease" }}
               >
-                {liveTransactions.map((tx, i) => (
-                  <TransactionRow
-                    key={i}
-                    icon={tx.icon}
-                    title={tx.title}
-                    subtitle={tx.subtitle}
-                    amount={tx.amount}
-                    positive={tx.positive}
-                    showTopBorder={i > 0}
-                  />
-                ))}
-              </motion.div>
-            </GlassPanel>
+                {showArchive ? "← " + t.recentFlow : t.archive}
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!showArchive ? (
+                <motion.div key="recent" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <GlassPanel style={{ borderRadius: 28, padding: "6px" }}>
+                    <motion.div initial="hidden" animate="visible" variants={transactionListVariants}>
+                      {liveTransactions.map((tx, i) => (
+                        <TransactionRow key={i} icon={tx.icon} title={tx.title} subtitle={tx.subtitle} amount={tx.amount} positive={tx.positive} showTopBorder={i > 0} />
+                      ))}
+                    </motion.div>
+                  </GlassPanel>
+                </motion.div>
+              ) : (
+                <motion.div key="archive" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+                  {archiveGroups.length === 0 ? (
+                    <p style={{ fontSize: 13, color: "#27272a", textAlign: "center", padding: "32px 0" }}>No transactions yet</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                      {archiveGroups.map((group, gi) => (
+                        <div key={gi}>
+                          <p style={{ fontSize: 9, color: "#27272a", textTransform: "uppercase", letterSpacing: "0.25em", fontWeight: 600, marginBottom: 10, padding: "0 4px" }}>
+                            {group.label}
+                          </p>
+                          <GlassPanel style={{ borderRadius: 24, padding: "6px" }}>
+                            {group.items.map((tx, i) => (
+                              <TransactionRow key={i} icon={tx.icon} title={tx.title} subtitle={tx.subtitle} amount={tx.amount} positive={tx.positive} showTopBorder={i > 0} />
+                            ))}
+                          </GlassPanel>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
         </Reveal>
 

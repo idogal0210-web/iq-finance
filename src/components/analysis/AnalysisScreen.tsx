@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RICH_BLACK, EMERALD, EMERALD_OUTER, noiseUrl, smooth } from '../../theme';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -19,7 +19,7 @@ const CHART_COLORS = [EMERALD, ROSE, AMBER, BLUE, VIOLET];
 
 // ─── Data types ───────────────────────────────────────────────────────────────
 interface MonthlyBarData { label: string; income: number; expenses: number; }
-interface CategoryData   { label: string; amount: number; ratio: number; color: string; }
+interface CategoryData   { id: string | null; label: string; amount: number; ratio: number; color: string; }
 
 // ─── Mock fallback data ───────────────────────────────────────────────────────
 const MOCK_MONTHLY: MonthlyBarData[] = [
@@ -32,11 +32,11 @@ const MOCK_MONTHLY: MonthlyBarData[] = [
 ];
 
 const MOCK_CATEGORIES: CategoryData[] = [
-  { label: 'Housing',     amount: 3200, ratio: 0.394, color: EMERALD },
-  { label: 'Food',        amount: 1800, ratio: 0.222, color: ROSE   },
-  { label: 'Transport',   amount: 1100, ratio: 0.136, color: AMBER  },
-  { label: 'Health',      amount:  920, ratio: 0.113, color: BLUE   },
-  { label: 'Leisure',     amount: 1100, ratio: 0.136, color: VIOLET },
+  { id: null, label: 'Housing',   amount: 3200, ratio: 0.394, color: EMERALD },
+  { id: null, label: 'Food',      amount: 1800, ratio: 0.222, color: ROSE   },
+  { id: null, label: 'Transport', amount: 1100, ratio: 0.136, color: AMBER  },
+  { id: null, label: 'Health',    amount:  920, ratio: 0.113, color: BLUE   },
+  { id: null, label: 'Leisure',   amount: 1100, ratio: 0.136, color: VIOLET },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -69,9 +69,10 @@ function computeCategoryData(
   return Array.from(catMap.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([id, amount], i) => {
-      const cat = categories.find(c => c.id === id);
+    .map(([catId, amount], i) => {
+      const cat = categories.find(c => c.id === catId);
       return {
+        id: catId,
         label: (isHe ? cat?.name_he : cat?.name) ?? 'Other',
         amount,
         ratio: amount / total,
@@ -205,6 +206,88 @@ function CategoryDonut({ data }: { data: CategoryData[] }) {
   );
 }
 
+// ─── Drill-Down Transaction List ──────────────────────────────────────────────
+function DrillDownList({
+  transactions,
+  categoryId,
+  label,
+  color,
+  onClear,
+  isRtl,
+  t,
+}: {
+  transactions: import('../../lib/db').DbTransaction[];
+  categoryId: string;
+  label: string;
+  color: string;
+  onClear: () => void;
+  isRtl: boolean;
+  t: import('../../i18n/translations').TranslationStrings;
+}) {
+  const row = (isRtl ? 'row-reverse' : 'row') as 'row' | 'row-reverse';
+  const filtered = transactions.filter(tx => tx.category_id === categoryId);
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexDirection: row }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: row }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}60` }} />
+          <span style={{ fontSize: 11, color: '#a1a1aa', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+            {label}
+          </span>
+        </div>
+        <button
+          onClick={onClear}
+          style={{
+            background: 'none', border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: 10, padding: '4px 12px',
+            color: '#52525b', fontSize: 10, cursor: 'pointer',
+            letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit',
+          }}
+        >
+          {t.allCategories}
+        </button>
+      </div>
+      {filtered.length === 0 ? (
+        <p style={{ fontSize: 13, color: '#27272a', textAlign: 'center', padding: '16px 0' }}>No transactions</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {filtered.map((tx, i) => {
+            const isIncome = tx.type === 'income';
+            const Icon = isIncome ? ArrowDownLeft : ArrowUpRight;
+            return (
+              <div key={tx.id ?? i} style={{
+                display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px',
+                borderRadius: 14, flexDirection: row,
+                background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent',
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={13} strokeWidth={1.5} color={isIncome ? EMERALD : '#fb7185'} />
+                </div>
+                <div style={{ flex: 1, textAlign: isRtl ? 'right' : 'left' }}>
+                  <p style={{ fontSize: 13, color: '#d4d4d8', fontWeight: 400, marginBottom: 2 }}>
+                    {tx.description ?? (isIncome ? t.income : t.flow)}
+                  </p>
+                  <p style={{ fontSize: 10, color: '#3f3f46' }}>{tx.date}</p>
+                </div>
+                <span style={{
+                  fontSize: 14, fontWeight: 500, fontVariantNumeric: 'tabular-nums',
+                  color: isIncome ? EMERALD : '#e4e4e7', flexShrink: 0,
+                }}>
+                  {isIncome ? '+' : '−'}₪{tx.amount.toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function AnalysisScreen() {
   const { isRtl, t } = useLanguage();
@@ -212,6 +295,7 @@ export default function AnalysisScreen() {
   const { transactions, totalIncome, totalExpenses } = useFinance();
   const { data: categories = [] } = useDbCategories();
   const navigate = useNavigate();
+  const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
 
   const hasLiveData = transactions.length > 0;
   const income   = hasLiveData && totalIncome   > 0 ? totalIncome   : 24000;
@@ -365,26 +449,74 @@ export default function AnalysisScreen() {
               <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: row }}>
                 <CategoryDonut data={categoryData} />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11 }}>
-                  {categoryData.map((cat, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, flexDirection: row }}>
-                      <div style={{
-                        width: 7, height: 7, borderRadius: 9999,
-                        background: cat.color, flexShrink: 0,
-                        boxShadow: `0 0 5px ${cat.color}60`,
-                      }} />
-                      <span style={{
-                        flex: 1, fontSize: 12, color: '#a1a1aa', fontWeight: 400,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {cat.label}
-                      </span>
-                      <span style={{ fontSize: 11, color: '#52525b', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                        {Math.round(cat.ratio * 100)}%
-                      </span>
-                    </div>
-                  ))}
+                  {/* All filter chip */}
+                  {selectedCatId && (
+                    <button
+                      onClick={() => setSelectedCatId(null)}
+                      style={{
+                        alignSelf: isRtl ? 'flex-end' : 'flex-start',
+                        padding: '4px 10px', borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'rgba(255,255,255,0.04)',
+                        color: '#a1a1aa', fontSize: 10, cursor: 'pointer',
+                        letterSpacing: '0.1em', textTransform: 'uppercase',
+                        fontFamily: 'inherit', marginBottom: 2,
+                      }}
+                    >
+                      {t.allCategories} ×
+                    </button>
+                  )}
+                  {categoryData.map((cat, i) => {
+                    const isSelected = selectedCatId === cat.id;
+                    const canDrill   = cat.id !== null && hasLiveData;
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => canDrill ? setSelectedCatId(isSelected ? null : cat.id) : undefined}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 9, flexDirection: row,
+                          cursor: canDrill ? 'pointer' : 'default',
+                          opacity: selectedCatId && !isSelected ? 0.4 : 1,
+                          transition: 'opacity 0.25s ease',
+                          padding: '2px 4px', borderRadius: 8,
+                          background: isSelected ? 'rgba(255,255,255,0.04)' : 'transparent',
+                        }}
+                      >
+                        <div style={{
+                          width: 7, height: 7, borderRadius: 9999, flexShrink: 0,
+                          background: cat.color,
+                          boxShadow: isSelected ? `0 0 7px ${cat.color}80` : `0 0 5px ${cat.color}60`,
+                        }} />
+                        <span style={{
+                          flex: 1, fontSize: 12, color: isSelected ? '#e4e4e7' : '#a1a1aa',
+                          fontWeight: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {cat.label}
+                        </span>
+                        <span style={{ fontSize: 11, color: isSelected ? '#e4e4e7' : '#52525b', fontWeight: 500, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                          {Math.round(cat.ratio * 100)}%
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Drill-down list */}
+              {selectedCatId && hasLiveData && (() => {
+                const cat = categoryData.find(c => c.id === selectedCatId);
+                return cat ? (
+                  <DrillDownList
+                    transactions={transactions}
+                    categoryId={selectedCatId}
+                    label={cat.label}
+                    color={cat.color}
+                    onClear={() => setSelectedCatId(null)}
+                    isRtl={isRtl}
+                    t={t}
+                  />
+                ) : null;
+              })()}
             </GlassPanel>
           </section>
         </Reveal>
