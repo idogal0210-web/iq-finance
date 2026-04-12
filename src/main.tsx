@@ -6,7 +6,8 @@ import App from './App'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/iq-finance/sw.js', { scope: '/iq-finance/' });
+    const base = import.meta.env.BASE_URL;
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
   });
 }
 

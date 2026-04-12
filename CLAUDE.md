@@ -173,9 +173,19 @@ npm run test:coverage # Coverage report
 
 ## Deployment
 
+> **PERMANENT RULE: All deployments target GitHub Pages exclusively.**
+> Do not add Vercel, Netlify, or any other hosting platform. Do not create `vercel.json`, `netlify.toml`, or equivalent files.
+
 ### GitHub Pages
-- Push to `main` → CI runs tests → builds with `VITE_BASE_PATH=/iq-finance/` → deploys `dist/`
-- PWA service worker cache key: `'iq-finance-v1'` — bump when deploying breaking asset changes
+- Live URL: `https://idogal0210-web.github.io/iq-finance/`
+- Push to `main` → CI runs tests → builds → stamps SW cache with git SHA → deploys `dist/`
+- Build env vars injected from GitHub Actions secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- `VITE_BASE_PATH=/iq-finance/` is hardcoded in the workflow — never change this
+
+### Service Worker / PWA
+- `public/sw.js` cache key pattern: `iq-finance-v{N}` — CI replaces this with `iq-finance-{git-sha}` on every deploy (automatic cache bust)
+- SW registration in `main.tsx` uses `import.meta.env.BASE_URL` — do not hardcode `/iq-finance/`
+- `public/manifest.json` paths are hardcoded to `/iq-finance/` — keep in sync with the repo name
 
 ### BrowserRouter base path
 `App.tsx` uses `basename={import.meta.env.BASE_URL.replace(/\/$/, '')}` to strip trailing slash and avoid double-slash route paths (`//settings`).
